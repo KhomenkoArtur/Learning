@@ -1,0 +1,266 @@
+--1
+SELECT maker, type
+	FROM product
+		ORDER BY maker;
+
+--2
+SELECT model,ram, screen, price
+	FROM laptop
+		WHERE price > 1000
+			ORDER BY ram ASC, price DESC ;
+
+--3
+SELECT *
+	FROM printer
+		ORDER BY price DESC;	
+
+--4
+SELECT model, speed, hd, cd, price
+	FROM pc
+		WHERE cd = '12x' or cd = '24x' and price < 600
+			ORDER BY speed DESC;
+
+--5
+SELECT name, class
+	FROM ships
+		ORDER BY name;
+
+--6
+SELECT *
+	FROM pc 
+		WHERE speed >= 500 and price < 800
+			ORDER BY price DESC; 
+
+--7
+SELECT *
+	FROM printer
+		WHERE not type = 'Matrix' and price < 300
+			ORDER BY type DESC;
+--8
+SELECT model, speed,price
+	FROM pc
+		WHERE price between 400 and 600
+			ORDER BY hd;
+
+--9
+SELECT  model, speed, hd, price
+	FROM laptop
+		WHERE screen >= 12
+			ORDER BY price DESC;
+
+--10
+SELECT  model, type, price
+	FROM printer
+		WHERE price < 300
+			ORDER BY type DESC;
+--11
+SELECT  model, ram, price
+	FROM laptop
+		WHERE ram = 64
+			ORDER BY screen;
+--12
+SELECT  model, ram, price
+	FROM laptop
+		WHERE ram > 64
+			ORDER BY hd;
+--13
+SELECT  model, speed, price
+	FROM pc
+		WHERE speed between 500 and 750
+			ORDER BY hd DESC;
+--14
+SELECT *
+	FROM outcome_o
+		WHERE out > 2000
+			ORDER BY date DESC;
+--15
+SELECT *
+	FROM income_o
+		WHERE inc between 5000 and 10000
+			ORDER BY inc;
+--16
+SELECT *
+	FROM income_o
+		WHERE point = 1
+			ORDER BY inc;
+--17
+SELECT *
+	FROM outcome
+		WHERE point = 2
+			ORDER BY out;
+--18
+SELECT *
+	FROM classes
+		WHERE country = 'Japan'
+			ORDER BY type;
+--19
+SELECT name, launched
+	FROM ships
+		WHERE launched between 1920 and 1942
+			ORDER BY launched DESC; 
+--20
+SELECT  ship, battle, result
+	FROM outcomes
+		WHERE not result = 'sunk'
+			ORDER BY ship DESC;
+
+--21
+SELECT ship, battle, result
+	FROM outcomes
+		WHERE result = 'sunk'
+			ORDER BY ship DESC;
+
+--22
+
+SELECT class, displacement
+	FROM classes
+		WHERE displacement >= 40000
+			ORDER BY type;
+--23
+SELECT trip_no, town_from, town_to
+	FROM trip
+		WHERE town_from = 'London' or town_to = 'London'
+			ORDER BY time_out;
+--24
+SELECT trip_no, plane, town_from, town_to
+	FROM trip
+		WHERE  plane = 'TU-134'
+			ORDER BY time_out DESC;
+--25
+SELECT  trip_no, plane, town_from, town_to
+	FROM trip
+		WHERE not plane = 'IL-86'
+			ORDER BY plane;
+--26
+SELECT  trip_no, town_from, town_to
+	FROM trip
+		WHERE not town_from = 'Rostov' and not town_to = 'Rostov'
+			ORDER BY plane;
+
+--27
+SELECT *
+	FROM pc
+		WHERE model LIKE '11%'
+--28
+SELECT *
+	FROM outcome
+		WHERE DATEPART(MONTH, date) = 3;
+		
+--29
+SELECT *
+	FROM outcome_o
+		WHERE DATEPART(DAY, date) = 14;
+
+--30
+SELECT * 
+	FROM ships
+		WHERE name like 'W%' or name like '%N';
+--31
+SELECT *
+	FROM ships
+		WHERE name like 'ee%' or name like'%ee%' or name like'%e%e';
+--32
+SELECT *
+	FROM ships
+		WHERE name not like'%a'; 
+--33
+SELECT *
+	FROM battles
+		WHERE CHARINDEX(' ', name) != 0
+		and RIGHT(name,1) != 'c';
+	--		and not name like '%c';
+
+
+--34
+SELECT *
+	FROM trip
+		WHERE DATEPART(HOUR, time_out) between 12 and 17;
+--35
+SELECT *
+	FROM trip
+		WHERE DATEPART(HOUR, time_in) between 17 and 23;
+
+--36
+SELECT *
+	FROM trip
+		WHERE DATEPART(HOUR, time_in) between 10 and 21;
+--37
+SELECT date, place
+	FROM pass_in_trip
+		WHERE place like '1%';
+--38
+SELECT date, place
+	FROM pass_in_trip
+		WHERE place like '%c';
+--39
+SELECT SUBSTRING (name, CHARINDEX(' ', name) +1,256) as Name
+	FROM passenger
+		WHERE name like '% C%';
+--40
+SELECT SUBSTRING (name, CHARINDEX(' ', name) +1,256) as Name
+	FROM passenger
+		WHERE name  NOT like '% j%';
+--41
+SELECT 'Середня ціна = '+ CAST(AVG(price) AS VARCHAR) AS AVG_PRICE
+	FROM laptop;
+--42
+SELECT code,'Модель '+ model, 'проц в мегагерцах ' + CAST(speed AS VARCHAR),'Обєм памяті ' + CAST(ram AS VARCHAR),'Розмір диску ' + CAST(hd AS VARCHAR),'Швидкість СD ' + cd,'Ціна ' + CAST(price AS VARCHAR) 
+	FROM pc;
+--43
+select convert(varchar, date, 102) AS Date1
+	FROM income;
+
+--44
+SELECT ship, battle,
+		(CASE result 
+			WHEN 'sunk' THEN 'потонув'
+			WHEN 'damaged' THEN 'пошкоджено'
+			WHEN 'ok' THEN 'цілий'
+		END) as result
+	FROM outcomes
+--45
+SELECT 'Ряд : ' + SUBSTRING(place,1,1) AS Place1,'Місце: ' + SUBSTRING(place,2,1) AS Place2
+	FROM pass_in_trip;
+--46
+SELECT ('From ' + Rtrim(town_from) + ' to '  + Ltrim(town_to))
+	FROM trip
+--47
+SELECT *
+	FROM trip;
+--48
+SELECT maker, COUNT(pc.model) as Count_Model
+	FROM pc join product
+		ON pc.model = product.model
+			GROUP BY maker
+				HAVING COUNT(pc.model)>2
+--49
+ SELECT town_from, town_to, COUNT(time_out) as Count_Out, COUNT(time_in) as Count_In
+	FROM trip
+		GROUP BY town_from, town_to
+
+--50
+SELECT type, COUNT(model) AS Count_model
+	FROM printer
+		GROUP BY type;
+--51
+SELECT  DISTINCT cd,COUNT(model) AS Count_Model
+	FROM pc
+		GROUP BY cd
+--52
+SELECT*, trip_no, DATEDIFF(HOUR, time_out, time_in) AS Time_Fly
+	FROM trip
+--53
+SELECT COUNT(point), SUM(out) AS Sum_Out, DATEPART(day,date) AS Each_Day, MAX(out) AS Max_out, MIN(out) AS Min_out
+	FROM outcome
+		GROUP BY date
+--54
+SELECT trip_no, SUBSTRING(place,1,1) AS Line, COUNT(SUBSTRING(place,2,1)) AS Busy_places
+	FROM pass_in_trip
+		GROUP BY trip_no, SUBSTRING(place,1,1)
+
+--55
+SELECT SUBSTRING(name, CHARINDEX(' ',name) +1, 256)
+	FROM passenger
+		WHERE name like '% S%' or name like '% B%' or name like '% A%'
+			GROUP BY SUBSTRING(name, CHARINDEX(' ',name) +1, 256)
+		
