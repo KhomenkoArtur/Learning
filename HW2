@@ -1,0 +1,144 @@
+--1
+SELECT  maker, type, speed, hd
+	FROM pc join product
+		ON pc.model = product.model
+		WHERE hd <= 8;
+--2
+SELECT maker, speed
+	FROM product join pc
+		ON product.model = pc.model
+			WHERE speed >= 600;
+--3
+SELECT maker
+	FROM product join laptop
+		ON product.model = laptop.model
+		WHERE speed <= 500;
+--4
+SELECT DISTINCT lap1.model, lap1.ram, lap1.hd
+	FROM laptop as lap1 join laptop as lap2
+		ON lap1.model = lap2.model
+			WHERE lap1.ram = lap2.ram
+				AND lap1.hd = lap2.hd
+				ORDER BY lap1.model DESC
+--5
+SELECT type, country
+	FROM classes
+		WHERE type = 'bb' or type= 'bc'
+--6
+SELECT maker, pc.model
+	FROM product join pc
+		ON product.model = pc.model
+			WHERE price < 600;
+--7
+SELECT printer.model, maker
+	FROM product join printer
+		ON product.model = printer.model
+			WHERE printer.price > 300;
+------------------------------8
+SELECT maker, pc.model,pc.price,laptop.model, laptop.price
+	FROM product join pc
+		ON product.model = pc.model
+			join laptop 
+				ON laptop.model = product.model
+--9
+SELECT maker, pc.model, pc.price
+	FROM product join pc
+		ON product.model = pc.model
+			WHERE pc.price IS NOT NULL;
+--10
+SELECT maker, type, laptop.model, speed
+	FROM laptop join product
+		ON laptop.model = product.model
+			WHERE speed > 600; 
+--11
+SELECT ships.name, ships.class, ships.launched, displacement
+	FROM ships join classes
+		ON ships.class = classes.class
+--12
+SELECT battle, date
+	FROM battles join outcomes
+		ON battles.name = outcomes.battle
+			WHERE NOT result ='sunk'
+--13
+SELECT ships.*, country
+	FROM ships join classes
+		ON ships.class = classes.class
+--14
+SELECT trip_no, plane, name
+	FROM trip join company
+		ON trip.id_comp = company.id_comp
+--15
+SELECT passenger.*, date
+	FROM passenger join pass_in_trip
+		ON passenger.id_psg = pass_in_trip.id_psg
+--16
+SELECT  pc.model, speed,hd
+	FROM pc join product
+		ON pc.model = product.model
+			WHERE ram between 10 and 20 
+				AND maker = 'A'
+					ORDER BY speed
+
+--17
+SELECT
+	maker,
+	[pc],
+	[laptop],
+	[printer]
+FROM
+(
+	SELECT maker, type
+	FROM product
+)AS a
+PIVOT
+(	
+	COUNT(type)
+	FOR [type] IN ([pc],[laptop],[printer])
+) AS Pvt
+
+--18
+SELECT 
+		[11],
+		[12],
+		[14],
+		[15]
+	FROM 
+		(
+		SELECT price, screen
+			FROM laptop 
+		) AS aa
+		PIVOT
+		( AVG(price)
+			FOR [screen] IN ([11],[12],[14],[15])) AS Pvt
+--19
+SELECT P.maker, L.*  FROM 
+Product P 
+CROSS APPLY
+(SELECT * FROM Laptop L WHERE P.model= L.model) L;
+--20
+SELECT *
+	FROM laptop
+		CROSS APPLY
+			(SELECT MAX(price) AS Max_price
+				FROM laptop  join product
+					ON product.model = laptop.model
+						WHERE maker = (SELECT maker
+										FROM product
+											WHERE product.model = laptop.model)) AS A
+
+--21
+SELECT * 
+	FROM laptop L1
+		CROSS APPLY
+			(SELECT TOP 1 * FROM Laptop L2 
+				WHERE L1.model < L2.model OR (L1.model = L2.model AND L1.code < L2.code) 
+					ORDER BY model, code) X
+						ORDER BY L1.model;
+--22
+SELECT * FROM laptop L1
+OUTER APPLY
+(SELECT TOP 1 * 
+FROM Laptop L2 
+WHERE L1.model < L2.model OR (L1.model = L2.model AND L1.code < L2.code) 
+ORDER BY model, code) X
+ORDER BY L1.model;
