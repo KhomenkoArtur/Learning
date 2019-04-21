@@ -1,0 +1,160 @@
+--1
+;WITH Letters AS
+	(
+		SELECT ASCII('A') code, CHAR(ASCII('A')) letter
+			UNION ALL
+		SELECT code+1, CHAR(code+1) FROM Letters
+			WHERE code+1 <= ASCII('Z')
+	)
+	SELECT letter FROM Letters;
+
+
+--2
+WITH pc1_CTE(model, speed, ram)
+AS
+(
+	SELECT model, speed, ram 
+		FROM pc
+			WHERE speed > 500
+)
+	SELECT COUNT(model), speed, ram
+		FROM pc
+			GROUP BY speed, ram;
+--3
+WITH geography_CTE as
+	(
+		SELECT region_id,id as place_ID, name, region_id as Place_level
+			FROM geography
+				WHERE region_id = 1
+	)
+	SELECT *
+		FROM geography_CTE;
+--------------------4
+WITH geography_CTE AS
+	(
+		select region_id, id as place_id, name, region_id as place_level 
+			FROM geography
+				WHERE name = 'Ivano-Frankivsk'
+	)
+	SELECT *
+		FROM geography_CTE
+--5
+with CTE as
+  
+	(  
+		select 1 Number  
+		union all  
+		select Number + 1 from CTE where Number < 10000
+
+	)  
+	select *from CTE 
+	OPTION(MAXRECURSION 10000)
+
+--6
+WITH CTE as
+(
+	SELECT 1 Number
+	UNION ALL
+	SELECT Number + 1
+		FROM CTE
+			WHERE Number < 100000
+)
+
+SELECT * FROM CTE
+OPTION(MAXRECURSION 0)
+
+-----------------------------------7
+WITH Dates_CTE1 
+AS 
+	(
+		SELECT CAST('2019-01-01' as date) as Calendar_day
+		UNION ALL
+		SELECT dateadd( day, 1, Calendar_day) as Calendar_day
+			FROM Dates_CTE1
+				WHERE dateadd(day, 1, Calendar_day) < '2020-01-01'
+					
+
+	)
+
+	SELECT DATEPART(DAY, Calendar_day) as Calendar_day
+		FROM Dates_CTE1
+			 
+	OPTION(MAXRECURSION 366)
+--8
+WITH maker_CTE 
+AS
+	(
+		SELECT maker
+			FROM product
+				WHERE type NOT IN ('laptop') AND type IN('pc')
+	)
+	
+	SELECT maker
+		FROM maker_CTE
+			GROUP BY maker;
+---------------------9
+WITH maker_CTE AS
+	(
+		SELECT maker
+			FROM product
+				WHERE  type = ALL
+				(
+					SELECT maker
+						FROM product
+							WHERE NOT type = 'laptop'
+				)
+	)
+	SELECT maker
+		FROM maker_CTE
+			GROUP BY maker;
+
+--------------------10
+WITH maker_CTE AS 
+	(
+		SELECT maker
+			FROM product
+				WHERE type = ANY
+					(
+						SELECT maker
+							FROM product
+								WHERE type NOT IN( 'laptop')
+					)
+	)
+	SELECT maker
+		FROM maker_CTE;
+--11
+
+WITH maker_CTE AS 
+	(
+		SELECT DISTINCT maker
+			FROM product
+				WHERE type ='pc' 
+					AND maker IN( 
+						SELECT DISTINCT maker
+							FROM product
+								WHERE type = 'laptop')
+	)
+
+SELECT maker
+	FROM maker_CTE;
+	
+
+--12
+WITH maker_CTE AS
+	(
+		SELECT DISTINCT maker
+			FROM product
+				WHERE type = ALL(
+					SELECT DISTINCT maker
+						FROM product
+							WHERE type ='pc' 
+								AND maker IN(
+										SELECT DISTINCT maker
+											FROM product
+												WHERE type = 'laptop'
+											)		
+								)
+	)
+SELECT maker
+	FROM maker_CTE
+			
