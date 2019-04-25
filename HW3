@@ -34,10 +34,11 @@ WITH geography_CTE AS
 	(
 		select region_id, id as place_id, name, region_id as place_level 
 			FROM geography
-				WHERE name = 'Ivano-Frankivsk'
+				WHERE name   = 'Ivano-Frankivsk'
 	)
 	SELECT *
-		FROM geography_CTE
+		FROM geography_CTE;
+		
 --5
 with CTE as
   
@@ -63,7 +64,7 @@ WITH CTE as
 SELECT * FROM CTE
 OPTION(MAXRECURSION 0)
 
------------------------------------7
+--7
 WITH Dates_CTE1 
 AS 
 	(
@@ -76,49 +77,58 @@ AS
 
 	)
 
-	SELECT DATEPART(DAY, Calendar_day) as Calendar_day
+	SELECT COUNT((DATENAME(WEEKDAY, Calendar_day))) AS Count_Saturday, COUNT((DATENAME(WEEKDAY, Calendar_day))) AS Count_Sunday
 		FROM Dates_CTE1
+			WHERE DATENAME(WEEKDAY, Calendar_day) = 'Saturday' or
+				 DATENAME(WEEKDAY, Calendar_day) = 'Sunday'
+			
+
 			 
 	OPTION(MAXRECURSION 366)
+
 --8
 WITH maker_CTE 
 AS
 	(
 		SELECT maker
 			FROM product
-				WHERE type NOT IN ('laptop') AND type IN('pc')
+				WHERE type NOT IN ('laptop')
+					 AND type IN('pc')
 	)
 	
 	SELECT maker
 		FROM maker_CTE
 			GROUP BY maker;
----------------------9
-WITH maker_CTE AS
-	(
-		SELECT maker
-			FROM product
-				WHERE  type = ALL
-				(
-					SELECT maker
-						FROM product
-							WHERE NOT type = 'laptop'
-				)
-	)
-	SELECT maker
-		FROM maker_CTE
-			GROUP BY maker;
-
---------------------10
+--9
 WITH maker_CTE AS 
 	(
 		SELECT maker
 			FROM product
-				WHERE type = ANY
-					(
+				WHERE type = ALL(
 						SELECT maker
 							FROM product
-								WHERE type NOT IN( 'laptop')
-					)
+								WHERE type != 'laptop'
+									AND type = 'pc')
+						
+					
+				
+	)
+	SELECT maker
+		FROM maker_CTE;
+
+--10
+WITH maker_CTE AS 
+	(
+		SELECT maker
+			FROM product
+				WHERE type = ANY(
+						SELECT maker
+							FROM product
+								WHERE type != 'laptop'
+									AND type = 'pc')
+						
+					
+				
 	)
 	SELECT maker
 		FROM maker_CTE;
@@ -156,5 +166,217 @@ WITH maker_CTE AS
 								)
 	)
 SELECT maker
-	FROM maker_CTE
+	FROM maker_CTE;
+	
+	------13
+WITH maker_CTE AS
+		(
+			SELECT maker
+				FROM product
+					WHERE type = ALL(
+								SELECT maker 
+									FROM product
+										WHERE type IN ('pc', 'laptop')
+									)
+		)
+    SELECT maker
+	FROM maker_CTE;
+  
+  --14
+WITH maker_CTE AS
+	(	
+		SELECT maker
+			FROM product join pc
+				ON product.model = pc.model
+					WHERE type IN (
+						SELECT maker 
+							FROM product join pc
+								ON product.model = pc.model
+									WHERE type = ALL (
+										 SELECT maker
+											FROM product join pc
+												ON product.model = pc.model
+													WHERE type = 'pc' AND type = ANY(
+                                                          SELECT maker
+																						FROM product join pc
+																							ON product.model = pc.model
+																								WHERE type = 'laptop'
+																					)
+													)
+									)
+
+	
+	)
+	SELECT maker
+		FROM maker_CTE;
+  
+  --15
+WITH count_CTE AS
+	(	
+	SELECT country, class
+				FROM classes
+				
+					
+	)
+  
+ --16
+WITH ship_CTE AS(
+		SELECT ship, battle, date, result
+			FROM outcomes join battles
+				ON outcomes.battle = battles.name
+					WHERE result = 'damaged'
+	)
+  SELECT ship, battle, date
+FROM ship_CTE;
+
+--17
+WITH maker_CTE AS
+	(
+		SELECT maker
+			FROM product
+				WHERE EXISTS (
+								SELECT maker 
+									 FROM pc join product
+										ON pc.model = product.model
+											WHERE pc.model= 'pc'
+								)
+	)
+  SELECT maker
+	FROM maker_CTE;
+  
+ --18
+WITH maker_CTE AS
+
+	(
+	SELECT maker
+		FROM product join pc
+			ON product.model = pc.model
+				 WHERE type ='printer' and speed = (
+						SELECT  MAX(speed)  
+							FROM product join pc
+								ON product.model = pc.model
+									 )
+
+
+	)
+  SELECT *
+		FROM maker_CTE
+    
+   --19
+WITH shi_CTE AS
+	(
+		SELECT class
+			FROM ships join outcomes
+				ON ships.name = outcomes.ship
+					WHERE result = 'sunk'
+						
+	)
+SELECT class
+	FROM shi_CTE;
+  
+ --20
+	SELECT  model 
+		FROM Printer
+			WHERE price = (SELECT MAX(price) 
+								FROM Printer
+               );
+               
+   --21
+		SELECT DISTINCT maker
+			FROM Product 
+				WHERE type = 'laptop' AND 
+					 maker IN(SELECT maker 
+					   FROM Product 
+							WHERE model IN(SELECT model 
+											 FROM PC
+												WHERE speed = (SELECT MIN(speed)
+																	FROM (SELECT speed 
+																		FROM PC 
+																			WHERE ram=(SELECT MIN(ram)
+																				FROM PC
+																						 )
+																		) AS EX
+														 )
+									 )
+					  )
+ --22
+  	SELECT product.maker, pri.price price
+		FROM (SELECT MIN(price) AS price 
+				 FROM Printer 
+					 WHERE color ='y'
+      ) pri  join Printer  ON pri.price = printer.price 
+			join Product  ON printer.model = product.model
+      
+ --23
+WITH bat_CTE AS
+	(
+		SELECT battle1.name AS battle, country
+			FROM (SELECT O.battle AS name, C.country, COUNT(O.ship) AS cnt 
+					FROM Outcomes O, Ships S, Classes C 
+						 WHERE O.ship = S.name AND 
+							 C.class = S.class 
+								GROUP BY O.battle, C.country
+							 ) battle1
+								WHERE battle1.cnt >= 3
+	)
+SELECT * 
+	FROM bat_CTE;
+
+--28
+SELECT Income.point, Income.date, SUM(out), SUM(inc)
+	FROM Income LEFT JOIN 
+		Outcome ON Income.point = Outcome.point AND
+			Income.date = Outcome.date
+				GROUP BY Income.point, Income.date
+
+UNION
+
+SELECT Outcome.point, Outcome.date, SUM(out), SUM(inc)
+	FROM Outcome LEFT JOIN 
+		 Income ON Income.point = Outcome.point AND
+			Income.date = Outcome.date
+				GROUP BY Outcome.point, Outcome.date;
+        
+--29
+
+WITH maker_CTE AS
+	(
+		SELECT maker, pc.model, type,price
+			FROM product join pc ON product.model = pc.model
+				WHERE pc.model = (
+					SELECT model
+						FROM product
+							WHERE maker = 'B'
+								AND type = 'pc')
+				UNION all
+		SELECT maker, laptop.model, type,price
+			FROM product join laptop ON product.model =laptop.model
+				WHERE laptop.model = (
+					SELECT model
+						FROM product
+							WHERE maker = 'B'
+								AND type = 'laptop')
+				UNION ALL
+		SELECT maker, printer.model, type,price
+			FROM product join printer ON product.model =printer.model
+				WHERE printer.model = (
+					SELECT model
+						FROM product
+							WHERE maker = 'B'
+								AND type = 'printer')
+	)
+	SELECT *
+		FROM maker_CTE;
+   
+   
+   --32
+  WITH ship_CTE AS
+	(
+		SELECT name
+			FROM ships
+				WHERE launched < 1992
+
+	)
+SELECT *
+	FROM ship_CTE
 			
